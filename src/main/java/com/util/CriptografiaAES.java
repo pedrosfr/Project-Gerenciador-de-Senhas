@@ -1,4 +1,4 @@
-package util;
+package com.util;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;

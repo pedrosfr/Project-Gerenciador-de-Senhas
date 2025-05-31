@@ -1,4 +1,4 @@
-package model;
+package com.model;
 
 public class Credencial {
     private String usuario;

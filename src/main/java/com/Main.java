@@ -1,3 +1,5 @@
+package com;
+
 import model.Credencial;
 import service.GerenciadorDeSenhas;
 import util.Autenticador2FA;

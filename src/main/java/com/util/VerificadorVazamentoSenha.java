@@ -1,4 +1,4 @@
-package util;
+package com.util;
 
 import java.net.URI;
 import java.net.http.HttpClient;
