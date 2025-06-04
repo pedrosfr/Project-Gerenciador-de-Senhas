@@ -1,9 +1,9 @@
 package com.service;
 
-import model.Credencial;
-import util.CriptografiaAES;
-import util.GeradorDeSenhas;
-import util.VerificadorVazamentoSenha;
+import com.model.Credencial;
+import com.util.CriptografiaAES;
+import com.util.GeradorDeSenhas;
+import com.util.VerificadorVazamentoSenha;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -60,7 +60,7 @@ public class GerenciadorDeSenhas {
         try {
             String senhaCriptografada = CriptografiaAES.criptografar(senha);
             credenciais.add(new Credencial(servico, usuario, senhaCriptografada));
-            System.out.println("✅ Credencial adicionada com sucesso!");
+            System.out.println("Credencial adicionada com sucesso!");
         } catch (Exception e) {
             System.out.println("Erro ao criptografar a senha: " + e.getMessage());
         }

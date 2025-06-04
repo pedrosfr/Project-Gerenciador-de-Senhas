@@ -1,10 +1,9 @@
 package com;
 
-import model.Credencial;
-import service.GerenciadorDeSenhas;
-import util.Autenticador2FA;
-import util.CriptografiaAES;
-
+import com.model.Credencial;
+import com.service.GerenciadorDeSenhas;
+import com.util.Autenticador2FA;
+import com.util.CriptografiaAES;
 
 public class Main {
     public static void main(String[] args) {
