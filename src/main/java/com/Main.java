@@ -5,26 +5,30 @@ import com.service.GerenciadorDeSenhas;
 import com.util.Autenticador2FA;
 import com.util.CriptografiaAES;
 
+import java.util.logging.Logger;
+
 public class Main {
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
+
     public static void main(String[] args) {
-        System.out.println("Gerenciador de Senhas iniciado!");
+        logger.info("Gerenciador de Senhas iniciado!");
 
         Autenticador2FA.enviarCodigo();
         if (!Autenticador2FA.validarCodigo()) {
-            System.out.println("Autenticação falhou. Encerrando o programa.");
+            logger.warning("Autenticação falhou. Encerrando o programa.");
             return;
         }
 
         GerenciadorDeSenhas gerenciador = new GerenciadorDeSenhas();
         gerenciador.iniciar();
 
-        // Exemplo de teste de descriptografia
+        // Teste de descriptografia (evite expor senhas)
         Credencial c = new Credencial("gmail", "usuario@gmail.com", "senhaCriptografadaAqui");
         try {
-            String senhaDescriptografada = CriptografiaAES.descriptografar(c.getSenha());
-            System.out.println("Senha descriptografada: " + senhaDescriptografada);
+            String resultado = CriptografiaAES.descriptografar(c.getSenha());
+            logger.info("Teste de descriptografia executado com sucesso.");
         } catch (Exception e) {
-            System.out.println("Erro ao descriptografar: " + e.getMessage());
+            logger.severe("Erro ao descriptografar: " + e.getMessage());
         }
     }
 }
