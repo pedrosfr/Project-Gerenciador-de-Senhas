@@ -2,7 +2,7 @@ package com.util;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
@@ -11,12 +11,13 @@ import java.util.Base64;
 
 public class CriptografiaAES {
 
-    private static final String ALGORITMO = "AES/CBC/PKCS5Padding";
-    private static final String SEGREDO = "FraseSecretaSuperForte"; // Ideal usar variável de ambiente
+    private static final String ALGORITMO = "AES/GCM/NoPadding";
+    private static final String SEGREDO = System.getenv("CHAVE_SECRETA_AES"); // Usar variável de ambiente
     private static final int SALT_LENGTH = 16;
-    private static final int IV_LENGTH = 16;
+    private static final int IV_LENGTH = 12;
     private static final int ITERATIONS = 65536;
-    private static final int KEY_LENGTH = 128;
+    private static final int KEY_LENGTH = 256; // Aumentado para 256 bits
+    private static final int GCM_TAG_LENGTH = 128;
 
     public static String criptografar(String valor) {
         try {
@@ -29,11 +30,11 @@ public class CriptografiaAES {
 
             // Deriva chave com PBKDF2
             SecretKeySpec chave = gerarChave(SEGREDO, salt);
-            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, ivBytes);
 
             // Inicializa cipher
             Cipher cipher = Cipher.getInstance(ALGORITMO);
-            cipher.init(Cipher.ENCRYPT_MODE, chave, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, chave, gcmParameterSpec);
             byte[] criptografado = cipher.doFinal(valor.getBytes());
 
             // Concatena salt + IV + criptografado
@@ -63,10 +64,10 @@ public class CriptografiaAES {
             System.arraycopy(combinado, SALT_LENGTH + IV_LENGTH, criptografado, 0, criptografado.length);
 
             SecretKeySpec chave = gerarChave(SEGREDO, salt);
-            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, ivBytes);
 
             Cipher cipher = Cipher.getInstance(ALGORITMO);
-            cipher.init(Cipher.DECRYPT_MODE, chave, iv);
+            cipher.init(Cipher.DECRYPT_MODE, chave, gcmParameterSpec);
             byte[] descriptografado = cipher.doFinal(criptografado);
 
             return new String(descriptografado);
@@ -76,10 +77,13 @@ public class CriptografiaAES {
     }
 
     private static SecretKeySpec gerarChave(String segredo, byte[] salt) throws Exception {
+        if (segredo == null || segredo.isEmpty()) {
+            throw new IllegalArgumentException("Segredo não pode ser nulo ou vazio");
+        }
+
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         KeySpec spec = new PBEKeySpec(segredo.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
         byte[] chaveBytes = factory.generateSecret(spec).getEncoded();
         return new SecretKeySpec(chaveBytes, "AES");
     }
 }
-
