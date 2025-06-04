@@ -1,43 +1,31 @@
+package com.util;
+
 import javax.crypto.Cipher;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.IvParameterSpec;
 import java.security.SecureRandom;
 import java.util.Base64;
 
 public class CriptografiaAES {
-
     private static final String ALGORITMO = "AES/CBC/PKCS5Padding";
-    private static final String SEGREDO = "FraseSecretaSuperForte"; // Ideal: variável de ambiente
-    private static final int SALT_LENGTH = 16;
-    private static final int IV_LENGTH = 16;
-    private static final int ITERATIONS = 65536;
-    private static final int KEY_LENGTH = 128;
+    private static final String CHAVE = "1234567890123456"; // substitua por algo mais seguro em produção
 
     public static String criptografar(String valor) {
         try {
-            // Geração de salt e IV
-            byte[] salt = new byte[SALT_LENGTH];
-            byte[] ivBytes = new byte[IV_LENGTH];
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(salt);
-            random.nextBytes(ivBytes);
+            Cipher cipher = Cipher.getInstance(ALGORITMO);
+            SecretKeySpec chave = new SecretKeySpec(CHAVE.getBytes(), "AES");
 
-            // Deriva chave com PBKDF2
-            SecretKeySpec chave = gerarChave(SEGREDO, salt);
+            byte[] ivBytes = new byte[16];
+            new SecureRandom().nextBytes(ivBytes); // IV aleatório
             IvParameterSpec iv = new IvParameterSpec(ivBytes);
 
-            // Inicializa cipher
-            Cipher cipher = Cipher.getInstance(ALGORITMO);
             cipher.init(Cipher.ENCRYPT_MODE, chave, iv);
             byte[] criptografado = cipher.doFinal(valor.getBytes());
 
-            // Combina salt + IV + criptografado
-            byte[] combinado = new byte[salt.length + ivBytes.length + criptografado.length];
-            System.arraycopy(salt, 0, combinado, 0, salt.length);
-            System.arraycopy(ivBytes, 0, combinado, salt.length, ivBytes.length);
-            System.arraycopy(criptografado, 0, combinado, salt.length + ivBytes.length, criptografado.length);
+            // IV + criptografia concatenados
+            byte[] combinado = new byte[ivBytes.length + criptografado.length];
+            System.arraycopy(ivBytes, 0, combinado, 0, ivBytes.length);
+            System.arraycopy(criptografado, 0, combinado, ivBytes.length, criptografado.length);
 
             return Base64.getEncoder().encodeToString(combinado);
         } catch (Exception e) {
@@ -45,23 +33,19 @@ public class CriptografiaAES {
         }
     }
 
-    public static String descriptografar(String textoCriptografado) {
+    public static String descriptografar(String valor) {
         try {
-            byte[] combinado = Base64.getDecoder().decode(textoCriptografado);
+            byte[] combinado = Base64.getDecoder().decode(valor);
+            byte[] ivBytes = new byte[16];
+            byte[] criptografado = new byte[combinado.length - 16];
 
-            // Extrai salt, IV e dados criptografados
-            byte[] salt = new byte[SALT_LENGTH];
-            byte[] ivBytes = new byte[IV_LENGTH];
-            byte[] criptografado = new byte[combinado.length - SALT_LENGTH - IV_LENGTH];
-
-            System.arraycopy(combinado, 0, salt, 0, SALT_LENGTH);
-            System.arraycopy(combinado, SALT_LENGTH, ivBytes, 0, IV_LENGTH);
-            System.arraycopy(combinado, SALT_LENGTH + IV_LENGTH, criptografado, 0, criptografado.length);
-
-            SecretKeySpec chave = gerarChave(SEGREDO, salt);
-            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+            System.arraycopy(combinado, 0, ivBytes, 0, 16);
+            System.arraycopy(combinado, 16, criptografado, 0, criptografado.length);
 
             Cipher cipher = Cipher.getInstance(ALGORITMO);
+            SecretKeySpec chave = new SecretKeySpec(CHAVE.getBytes(), "AES");
+            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+
             cipher.init(Cipher.DECRYPT_MODE, chave, iv);
             byte[] descriptografado = cipher.doFinal(criptografado);
 
@@ -69,12 +53,5 @@ public class CriptografiaAES {
         } catch (Exception e) {
             throw new RuntimeException("Erro ao descriptografar", e);
         }
-    }
-
-    private static SecretKeySpec gerarChave(String segredo, byte[] salt) throws Exception {
-        PBEKeySpec spec = new PBEKeySpec(segredo.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-        byte[] chave = factory.generateSecret(spec).getEncoded();
-        return new SecretKeySpec(chave, "AES");
     }
 }

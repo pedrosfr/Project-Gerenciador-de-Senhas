@@ -13,20 +13,28 @@ public class Main {
     public static void main(String[] args) {
         logger.info("Gerenciador de Senhas iniciado!");
 
+        // Autenticação 2FA
         Autenticador2FA.enviarCodigo();
         if (!Autenticador2FA.validarCodigo()) {
             logger.warning("Autenticação falhou. Encerrando o programa.");
             return;
         }
 
+        // Inicializa o gerenciador de senhas
         GerenciadorDeSenhas gerenciador = new GerenciadorDeSenhas();
         gerenciador.iniciar();
 
-        // Teste de descriptografia (evite expor senhas)
-        Credencial c = new Credencial("gmail", "usuario@gmail.com", "senhaCriptografadaAqui");
+        // Exemplo: Criptografa uma senha real
+        String senhaOriginal = "MinhaSenhaUltraSecreta123";
+        String senhaCriptografada = CriptografiaAES.criptografar(senhaOriginal);
+
+        // Cria credencial com senha criptografada
+        Credencial credencial = new Credencial("gmail", "usuario@gmail.com", senhaCriptografada);
+
         try {
-            String resultado = CriptografiaAES.descriptografar(c.getSenha());
-            logger.info("Teste de descriptografia executado com sucesso.");
+            // Descriptografa a senha criptografada (somente para teste)
+            String senhaDescriptografada = CriptografiaAES.descriptografar(credencial.getSenha());
+            logger.info("Senha descriptografada com sucesso: " + senhaDescriptografada);
         } catch (Exception e) {
             logger.severe("Erro ao descriptografar: " + e.getMessage());
         }
