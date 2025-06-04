@@ -13,6 +13,13 @@ public class Main {
     public static void main(String[] args) {
         logger.info("Gerenciador de Senhas iniciado!");
 
+        // Obtém a chave AES do ambiente
+        String aesKey = System.getenv("AES_KEY");
+        if (aesKey == null || aesKey.isEmpty()) {
+            logger.severe("Variável de ambiente AES_KEY não definida. Encerrando o programa.");
+            return;
+        }
+
         // Autenticação 2FA
         Autenticador2FA.enviarCodigo();
         if (!Autenticador2FA.validarCodigo()) {
@@ -26,14 +33,14 @@ public class Main {
 
         // Exemplo: Criptografa uma senha real
         String senhaOriginal = "MinhaSenhaUltraSecreta123";
-        String senhaCriptografada = CriptografiaAES.criptografar(senhaOriginal);
+        String senhaCriptografada = CriptografiaAES.criptografar(senhaOriginal, aesKey);
 
         // Cria credencial com senha criptografada
         Credencial credencial = new Credencial("gmail", "usuario@gmail.com", senhaCriptografada);
 
         try {
             // Descriptografa a senha criptografada (somente para teste)
-            String senhaDescriptografada = CriptografiaAES.descriptografar(credencial.getSenha());
+            String senhaDescriptografada = CriptografiaAES.descriptografar(credencial.getSenha(), aesKey);
             logger.info("Senha descriptografada com sucesso: " + senhaDescriptografada);
         } catch (Exception e) {
             logger.severe("Erro ao descriptografar: " + e.getMessage());
