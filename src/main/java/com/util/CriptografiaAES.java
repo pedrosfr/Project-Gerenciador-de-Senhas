@@ -1,18 +1,15 @@
-package com.util;
-
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
-import java.security.spec.KeySpec;
 import java.util.Base64;
 
 public class CriptografiaAES {
 
     private static final String ALGORITMO = "AES/CBC/PKCS5Padding";
-    private static final String SEGREDO = "FraseSecretaSuperForte"; // Ideal usar em variável de ambiente
+    private static final String SEGREDO = "FraseSecretaSuperForte"; // Ideal: variável de ambiente
     private static final int SALT_LENGTH = 16;
     private static final int IV_LENGTH = 16;
     private static final int ITERATIONS = 65536;
@@ -20,7 +17,7 @@ public class CriptografiaAES {
 
     public static String criptografar(String valor) {
         try {
-            // Geração de salt e IV aleatórios
+            // Geração de salt e IV
             byte[] salt = new byte[SALT_LENGTH];
             byte[] ivBytes = new byte[IV_LENGTH];
             SecureRandom random = new SecureRandom();
@@ -36,7 +33,7 @@ public class CriptografiaAES {
             cipher.init(Cipher.ENCRYPT_MODE, chave, iv);
             byte[] criptografado = cipher.doFinal(valor.getBytes());
 
-            // Concatena salt + IV + criptografia
+            // Combina salt + IV + criptografado
             byte[] combinado = new byte[salt.length + ivBytes.length + criptografado.length];
             System.arraycopy(salt, 0, combinado, 0, salt.length);
             System.arraycopy(ivBytes, 0, combinado, salt.length, ivBytes.length);
@@ -48,11 +45,11 @@ public class CriptografiaAES {
         }
     }
 
-    public static String descriptografar(String valor) {
+    public static String descriptografar(String textoCriptografado) {
         try {
-            byte[] combinado = Base64.getDecoder().decode(valor);
+            byte[] combinado = Base64.getDecoder().decode(textoCriptografado);
 
-            // Extrai salt, IV e conteúdo criptografado
+            // Extrai salt, IV e dados criptografados
             byte[] salt = new byte[SALT_LENGTH];
             byte[] ivBytes = new byte[IV_LENGTH];
             byte[] criptografado = new byte[combinado.length - SALT_LENGTH - IV_LENGTH];
@@ -74,10 +71,10 @@ public class CriptografiaAES {
         }
     }
 
-    private static SecretKeySpec gerarChave(String senha, byte[] salt) throws Exception {
+    private static SecretKeySpec gerarChave(String segredo, byte[] salt) throws Exception {
+        PBEKeySpec spec = new PBEKeySpec(segredo.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-        KeySpec spec = new PBEKeySpec(senha.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
-        byte[] chaveDerivada = factory.generateSecret(spec).getEncoded();
-        return new SecretKeySpec(chaveDerivada, "AES");
+        byte[] chave = factory.generateSecret(spec).getEncoded();
+        return new SecretKeySpec(chave, "AES");
     }
 }
