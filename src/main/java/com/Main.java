@@ -5,31 +5,38 @@ import com.service.GerenciadorDeSenhas;
 import com.util.Autenticador2FA;
 import com.util.CriptografiaAES;
 
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Gerenciador de Senhas iniciado!");
+import java.util.logging.Logger;
 
+public class Main {
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
+
+    public static void main(String[] args) {
+        logger.info("Gerenciador de Senhas iniciado!");
+
+        // Autenticação 2FA
         Autenticador2FA.enviarCodigo();
         if (!Autenticador2FA.validarCodigo()) {
-            System.out.println("Autenticação falhou. Encerrando o programa.");
+            logger.warning("Autenticação falhou. Encerrando o programa.");
             return;
         }
 
+        // Inicializa o gerenciador de senhas
         GerenciadorDeSenhas gerenciador = new GerenciadorDeSenhas();
         gerenciador.iniciar();
 
-        // Exemplo de teste com criptografia e descriptografia usando CBC com IV
-        try {
-            String senhaOriginal = "minhaSenhaSegura123!";
-            String senhaCriptografada = CriptografiaAES.criptografar(senhaOriginal);
-            String senhaDescriptografada = CriptografiaAES.descriptografar(senhaCriptografada);
+        // Exemplo: Criptografa uma senha real
+        String senhaOriginal = "MinhaSenhaUltraSecreta123";
+        String senhaCriptografada = CriptografiaAES.criptografar(senhaOriginal);
 
-            System.out.println("\n--- Teste de Criptografia AES CBC ---");
-            System.out.println("Senha original: " + senhaOriginal);
-            System.out.println("Senha criptografada (base64): " + senhaCriptografada);
-            System.out.println("Senha descriptografada: " + senhaDescriptografada);
+        // Cria credencial com senha criptografada
+        Credencial credencial = new Credencial("gmail", "usuario@gmail.com", senhaCriptografada);
+
+        try {
+            // Descriptografa a senha criptografada (somente para teste)
+            String senhaDescriptografada = CriptografiaAES.descriptografar(credencial.getSenha());
+            logger.info("Senha descriptografada com sucesso: " + senhaDescriptografada);
         } catch (Exception e) {
-            System.out.println("Erro durante teste de criptografia: " + e.getMessage());
+            logger.severe("Erro ao descriptografar: " + e.getMessage());
         }
     }
 }
