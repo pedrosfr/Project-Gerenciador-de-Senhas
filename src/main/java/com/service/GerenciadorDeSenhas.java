@@ -199,4 +199,5 @@ public class GerenciadorDeSenhas {
         }
         return senha.charAt(0) + "*****" + senha.charAt(senha.length() - 1);
     }
+
 }
