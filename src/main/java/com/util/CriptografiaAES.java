@@ -9,35 +9,53 @@ import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
+/**
+ * Classe utilitária para criptografia e descriptografia de dados
+ * utilizando o algoritmo AES com modo GCM (autenticado e seguro).
+ *
+ * Requer a variável de ambiente CHAVE_SECRETA_AES definida.
+ */
 public class CriptografiaAES {
 
     private static final String ALGORITMO = "AES/GCM/NoPadding";
-    private static final String SEGREDO = System.getenv("CHAVE_SECRETA_AES"); // Usar variável de ambiente
+    private static final String SEGREDO;
+
     private static final int SALT_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int ITERATIONS = 65536;
-    private static final int KEY_LENGTH = 256; // Aumentado para 256 bits
+    private static final int KEY_LENGTH = 256;
     private static final int GCM_TAG_LENGTH = 128;
 
+    // Bloco estático para validação imediata da chave secreta
+    static {
+        SEGREDO = System.getenv("CHAVE_SECRETA_AES");
+        if (SEGREDO == null || SEGREDO.isEmpty()) {
+            System.err.println("[ERRO] Variável de ambiente CHAVE_SECRETA_AES não está definida.");
+            throw new IllegalStateException("A variável de ambiente CHAVE_SECRETA_AES deve ser configurada para que a criptografia funcione.");
+        }
+    }
+
+    /**
+     * Criptografa uma string usando AES-GCM.
+     *
+     * @param valor Texto puro a ser criptografado
+     * @return Texto criptografado em Base64 (com salt e IV incluídos)
+     */
     public static String criptografar(String valor) {
         try {
-            // Geração de salt e IV aleatórios
             byte[] salt = new byte[SALT_LENGTH];
             byte[] ivBytes = new byte[IV_LENGTH];
             SecureRandom random = new SecureRandom();
             random.nextBytes(salt);
             random.nextBytes(ivBytes);
 
-            // Deriva chave com PBKDF2
             SecretKeySpec chave = gerarChave(SEGREDO, salt);
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, ivBytes);
 
-            // Inicializa cipher
             Cipher cipher = Cipher.getInstance(ALGORITMO);
             cipher.init(Cipher.ENCRYPT_MODE, chave, gcmParameterSpec);
             byte[] criptografado = cipher.doFinal(valor.getBytes());
 
-            // Concatena salt + IV + criptografado
             byte[] combinado = new byte[salt.length + ivBytes.length + criptografado.length];
             System.arraycopy(salt, 0, combinado, 0, salt.length);
             System.arraycopy(ivBytes, 0, combinado, salt.length, ivBytes.length);
@@ -46,15 +64,20 @@ public class CriptografiaAES {
             return Base64.getEncoder().encodeToString(combinado);
 
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao criptografar", e);
+            throw new RuntimeException("Erro ao criptografar: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Descriptografa uma string Base64 criptografada por este mesmo sistema.
+     *
+     * @param valorCriptografado Texto criptografado em Base64
+     * @return Texto original
+     */
     public static String descriptografar(String valorCriptografado) {
         try {
             byte[] combinado = Base64.getDecoder().decode(valorCriptografado);
 
-            // Extrai salt, IV e conteúdo criptografado
             byte[] salt = new byte[SALT_LENGTH];
             byte[] ivBytes = new byte[IV_LENGTH];
             byte[] criptografado = new byte[combinado.length - SALT_LENGTH - IV_LENGTH];
@@ -72,15 +95,18 @@ public class CriptografiaAES {
 
             return new String(descriptografado);
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao descriptografar", e);
+            throw new RuntimeException("Erro ao descriptografar: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Gera uma chave AES segura derivada de uma senha e salt utilizando PBKDF2.
+     *
+     * @param segredo Senha base
+     * @param salt Salt aleatório
+     * @return Chave AES derivada
+     */
     private static SecretKeySpec gerarChave(String segredo, byte[] salt) throws Exception {
-        if (segredo == null || segredo.isEmpty()) {
-            throw new IllegalArgumentException("Segredo não pode ser nulo ou vazio");
-        }
-
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         KeySpec spec = new PBEKeySpec(segredo.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
         byte[] chaveBytes = factory.generateSecret(spec).getEncoded();

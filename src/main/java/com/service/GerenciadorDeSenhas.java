@@ -75,7 +75,7 @@ public class GerenciadorDeSenhas {
             System.out.println("Credencial adicionada com sucesso!");
         } catch (Exception e) {
             System.out.println("Erro ao criptografar a senha: " + e.getMessage());
-            e.printStackTrace(); // <-- ESSENCIAL PARA DEBUG
+            e.printStackTrace(); // <-- PARA DEBUG
         }
     }
 
@@ -138,7 +138,7 @@ public class GerenciadorDeSenhas {
             for (Credencial c : credenciais) {
                 writer.println(c);
             }
-            System.out.println("Credenciais salvas com sucesso.");
+            System.out.println("Credenciais salvas com sucesso!");
         } catch (IOException e) {
             System.out.println("Erro ao salvar credenciais: " + e.getMessage());
         }
@@ -179,7 +179,7 @@ public class GerenciadorDeSenhas {
         try {
             boolean vazada = VerificadorVazamentoSenha.foiVazada(senha);
             if (vazada) {
-                System.out.println("⚠️  ATENÇÃO: Esta senha foi vazada em bancos de dados públicos!");
+                System.out.println("ATENÇÃO: Esta senha foi vazada em bancos de dados públicos!");
             } else {
                 System.out.println("Senha segura: não encontrada em vazamentos conhecidos.");
             }
