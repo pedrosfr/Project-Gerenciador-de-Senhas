@@ -33,6 +33,7 @@ public class Main {
             System.out.println("Senha descriptografada com sucesso: " + senhaDescriptografada);
         } catch (Exception e) {
             System.err.println("Erro ao descriptografar: " + e.getMessage());
+
         }
     }
 }

@@ -75,6 +75,7 @@ public class GerenciadorDeSenhas {
             System.out.println("Credencial adicionada com sucesso!");
         } catch (Exception e) {
             System.out.println("Erro ao criptografar a senha: " + e.getMessage());
+            e.printStackTrace(); // <-- ESSENCIAL PARA DEBUG
         }
     }
 
