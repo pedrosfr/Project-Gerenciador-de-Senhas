@@ -9,8 +9,11 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GerenciadorDeSenhas {
+    private static final Logger logger = Logger.getLogger(GerenciadorDeSenhas.class.getName());
     private final String caminhoArquivo = "credenciais.txt";
     private final List<Credencial> credenciais = new ArrayList<>();
     private final Scanner scanner = new Scanner(System.in);
@@ -27,22 +30,22 @@ public class GerenciadorDeSenhas {
                 opcao = Integer.parseInt(scanner.nextLine());
                 processarOpcao(opcao);
             } catch (NumberFormatException e) {
-                System.out.println("Opção inválida. Digite um número.");
+                logger.warning("Opção inválida. Digite um número.");
                 opcao = -1;
             }
         } while (opcao != 0);
     }
 
     private void exibirMenu() {
-        System.out.println("\n==== MENU GERENCIADOR DE SENHAS ====");
-        System.out.println("1. Adicionar nova credencial");
-        System.out.println("2. Listar credenciais");
-        System.out.println("3. Buscar por serviço");
-        System.out.println("4. Remover credencial");
-        System.out.println("5. Verificar se uma senha foi vazada");
-        System.out.println("6. Gerar senha segura");
-        System.out.println("0. Sair");
-        System.out.print("Escolha uma opção: ");
+        logger.info("\n==== MENU GERENCIADOR DE SENHAS ====");
+        logger.info("1. Adicionar nova credencial");
+        logger.info("2. Listar credenciais");
+        logger.info("3. Buscar por serviço");
+        logger.info("4. Remover credencial");
+        logger.info("5. Verificar se uma senha foi vazada");
+        logger.info("6. Gerar senha segura");
+        logger.info("0. Sair");
+        logger.info("Escolha uma opção: ");
     }
 
     private void processarOpcao(int opcao) {
@@ -55,80 +58,80 @@ public class GerenciadorDeSenhas {
             case 6 -> gerarSenhaSegura();
             case 0 -> {
                 salvarCredenciais();
-                System.out.println("Saindo...");
+                logger.info("Saindo...");
             }
-            default -> System.out.println("Opção inválida.");
+            default -> logger.warning("Opção inválida.");
         }
     }
 
     private void adicionarCredencial() {
-        System.out.print("Serviço: ");
+        logger.info("Serviço: ");
         String servico = scanner.nextLine();
-        System.out.print("Usuário: ");
+        logger.info("Usuário: ");
         String usuario = scanner.nextLine();
-        System.out.print("Senha: ");
+        logger.info("Senha: ");
         String senha = scanner.nextLine();
 
         try {
             String senhaCriptografada = CriptografiaAES.criptografar(senha);
             credenciais.add(new Credencial(servico, usuario, senhaCriptografada));
-            System.out.println("Credencial adicionada com sucesso!");
+            logger.info("Credencial adicionada com sucesso!");
         } catch (Exception e) {
-            System.out.println("Erro ao criptografar a senha: " + e.getMessage());
+            logger.log(Level.SEVERE, "Erro ao criptografar a senha: ", e);
         }
     }
 
     private void listarCredenciais() {
         if (credenciais.isEmpty()) {
-            System.out.println("Nenhuma credencial salva.");
+            logger.info("Nenhuma credencial salva.");
             return;
         }
 
-        System.out.println("\nCredenciais:");
+        logger.info("\nCredenciais:");
         for (Credencial c : credenciais) {
             try {
                 String senhaDescriptografada = CriptografiaAES.descriptografar(c.getSenha());
-                System.out.println("Serviço: " + c.getServico());
-                System.out.println("Usuário: " + c.getUsuario());
-                System.out.println("Senha: " + mascararSenha(senhaDescriptografada));
-                System.out.println("-----------------------------");
+                logger.log(Level.INFO, "Serviço: {0}", c.getServico());
+                logger.log(Level.INFO, "Usuário: {0}", c.getUsuario());
+                logger.log(Level.INFO, "Senha: {0}", mascararSenha(senhaDescriptografada));
+                logger.info("-----------------------------");
             } catch (Exception e) {
-                System.out.println("Erro ao descriptografar senha de " + c.getServico());
+                logger.log(Level.WARNING, "Erro ao descriptografar senha de {0}", c.getServico());
             }
         }
     }
 
     private void buscarCredencial() {
-        System.out.print("Digite o nome do serviço: ");
+        logger.info("Digite o nome do serviço: ");
         String servicoBusca = scanner.nextLine();
 
         for (Credencial c : credenciais) {
             if (c.getServico().equalsIgnoreCase(servicoBusca)) {
                 try {
                     String senhaDescriptografada = CriptografiaAES.descriptografar(c.getSenha());
-                    System.out.println("Usuário: " + c.getUsuario());
-                    System.out.println("Senha: " + mascararSenha(senhaDescriptografada));
+                    logger.log(Level.INFO, "Usuário: {0}", c.getUsuario());
+                    logger.log(Level.INFO, "Senha: {0}", mascararSenha(senhaDescriptografada));
                     return;
                 } catch (Exception e) {
-                    System.out.println("Erro ao descriptografar a senha.");
+                    logger.warning("Erro ao descriptografar a senha.");
                     return;
                 }
             }
         }
 
-        System.out.println("Serviço não encontrado.");
+        logger.info("Serviço não encontrado.");
     }
 
     private void removerCredencial() {
-        System.out.print("Digite o nome do serviço para remover: ");
+        logger.info("Digite o nome do serviço para remover: ");
         String servicoRemover = scanner.nextLine();
 
         boolean removido = credenciais.removeIf(c -> c.getServico().equalsIgnoreCase(servicoRemover));
 
         if (removido) {
-            System.out.println("Credencial removida com sucesso.");
+            logger.info("Credencial removida com sucesso.");
         } else {
-            System.out.println("Serviço não encontrado.");
+            logger.info("Serviço não encontrado.");
         }
     }
 
@@ -137,9 +140,9 @@ public class GerenciadorDeSenhas {
             for (Credencial c : credenciais) {
                 writer.println(c);
             }
-            System.out.println("Credenciais salvas com sucesso.");
+            logger.info("Credenciais salvas com sucesso.");
         } catch (IOException e) {
-            System.out.println("Erro ao salvar credenciais: " + e.getMessage());
+            logger.log(Level.SEVERE, "Erro ao salvar credenciais: ", e);
         }
     }
 
@@ -155,35 +158,35 @@ public class GerenciadorDeSenhas {
                     credenciais.add(c);
                 }
             }
-            System.out.println("Credenciais carregadas com sucesso.");
+            logger.info("Credenciais carregadas com sucesso.");
         } catch (IOException e) {
-            System.out.println("Erro ao carregar credenciais: " + e.getMessage());
+            logger.log(Level.SEVERE, "Erro ao carregar credenciais: ", e);
         }
     }
 
     private void gerarSenhaSegura() {
         try {
-            System.out.print("Informe o tamanho da senha: ");
+            logger.info("Informe o tamanho da senha: ");
             int tamanho = Integer.parseInt(scanner.nextLine());
             String senhaSegura = GeradorDeSenhas.gerarSenha(tamanho);
-            System.out.println("Senha gerada: " + mascararSenha(senhaSegura));
+            logger.log(Level.INFO, "Senha gerada: {0}", mascararSenha(senhaSegura));
         } catch (NumberFormatException e) {
-            System.out.println("Tamanho inválido. Digite um número.");
+            logger.warning("Tamanho inválido. Digite um número.");
         }
     }
 
     private void verificarSenhaVazada() {
-        System.out.print("Digite a senha que deseja verificar: ");
+        logger.info("Digite a senha que deseja verificar: ");
         String senha = scanner.nextLine();
         try {
             boolean vazada = VerificadorVazamentoSenha.foiVazada(senha);
             if (vazada) {
-                System.out.println("⚠️  ATENÇÃO: Esta senha foi vazada em bancos de dados públicos!");
+                logger.warning("ATENÇÃO: Esta senha foi vazada em bancos de dados públicos!");
             } else {
-                System.out.println("Senha segura: não encontrada em vazamentos conhecidos.");
+                logger.info("Senha segura: não encontrada em vazamentos conhecidos.");
             }
         } catch (Exception e) {
-            System.out.println("Erro ao verificar senha: " + e.getMessage());
+            logger.log(Level.SEVERE, "Erro ao verificar senha: ", e);
         }
     }
 
@@ -196,4 +199,5 @@ public class GerenciadorDeSenhas {
         }
         return senha.charAt(0) + "*****" + senha.charAt(senha.length() - 1);
     }
+
 }
