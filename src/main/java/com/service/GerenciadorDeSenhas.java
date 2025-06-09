@@ -167,11 +167,21 @@ public class GerenciadorDeSenhas {
             System.out.print("Informe o tamanho da senha: ");
             int tamanho = Integer.parseInt(scanner.nextLine());
             String senhaSegura = GeradorDeSenhas.gerarSenha(tamanho);
-            System.out.println("Senha gerada: " + mascararSenha(senhaSegura));
+
+            System.out.print("Deseja exibir a senha gerada? (S/N): ");
+            String opcao = scanner.nextLine().trim();
+
+            if (opcao.equalsIgnoreCase("S")) {
+                System.out.println("Senha gerada: " + senhaSegura);
+            } else {
+                System.out.println("Senha gerada: " + mascararSenha(senhaSegura));
+            }
+
         } catch (NumberFormatException e) {
             System.out.println("Tamanho inválido. Digite um número.");
         }
     }
+
 
     private void verificarSenhaVazada() {
         System.out.print("Digite a senha que deseja verificar: ");
